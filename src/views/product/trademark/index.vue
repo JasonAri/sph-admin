@@ -1,8 +1,6 @@
 <template>
   <div>
-    <el-button type="primary" icon="el-icon-plus" style="margin: 10px 0px" @click="updateTradeMark('add')"
-      >添加</el-button
-    >
+    <el-button type="primary" icon="el-icon-plus" style="margin: 10px 0px" @click="updateTradeMark('add')">添加</el-button>
     <el-table style="width: 100%" border="border" :data="list">
       <el-table-column type="index" prop="prop" label="序号" width="80px" align="center" />
       <el-table-column prop="tmName" label="品牌名称" width="width" align="center" />
@@ -13,7 +11,7 @@
       </el-table-column>
       <el-table-column prop="prop" label="操作" width="width" align="center">
         <template slot-scope="{ row, $index }">
-          <el-button type="warning" icon="el-icon-edit" size="mini" @click="updateTradeMark('edit')">修改</el-button>
+          <el-button type="warning" icon="el-icon-edit" size="mini" @click="updateTradeMark('edit', row)">修改</el-button>
           <el-button type="danger" icon="el-icon-delete" size="mini" @click="updateTradeMark('del')">删除</el-button>
         </template>
       </el-table-column>
@@ -31,19 +29,13 @@
       @size-change="handleSizeChange"
     />
     <!-- 对话框 -->
-    <el-dialog title="添加品牌" :visible.sync="dialogFormVisible">
-      <el-form style="width: 75%" :model="tmForm">
-        <el-form-item label="品牌名称" label-width="100px">
+    <el-dialog :title="tmForm.id ? '修改品牌' : '添加品牌'" :visible.sync="dialogFormVisible">
+      <el-form ref="ruleForm" style="width: 75%" :model="tmForm" :rules="rules">
+        <el-form-item label="品牌名称" label-width="100px" prop="tmName">
           <el-input v-model="tmForm.tmName" autocomplete="off" />
         </el-form-item>
-        <el-form-item label="品牌LOGO" label-width="100px">
-          <el-upload
-            class="avatar-uploader"
-            action="/dev-api/admin/product/fileUpload"
-            :show-file-list="false"
-            :on-success="handleAvatarSuccess"
-            :before-upload="beforeAvatarUpload"
-          >
+        <el-form-item label="品牌LOGO" label-width="100px" prop="logoUrl">
+          <el-upload class="avatar-uploader" action="/dev-api/admin/product/fileUpload" :show-file-list="false" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
             <img v-if="tmForm.logoUrl" :src="tmForm.logoUrl" class="avatar" />
             <i v-else class="el-icon-plus avatar-uploader-icon" />
             <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
@@ -62,6 +54,14 @@
 export default {
   name: 'trademark',
   data() {
+    // 自定义校验规则
+    const validateTmName = (rule, value, callback) => {
+      if (value.length < 2 || value.length > 10) {
+        callback(new Error('长度为2-10个字符'))
+      } else {
+        callback()
+      }
+    }
     return {
       // 代表分页器的页数
       page: 1,
@@ -77,6 +77,10 @@ export default {
       tmForm: {
         tmName: '',
         logoUrl: ''
+      },
+      rules: {
+        tmName: [{ required: true, validator: validateTmName, trigger: 'blur' }],
+        logoUrl: [{ required: true, message: '请选择品牌logo' }]
       }
     }
   },
@@ -103,12 +107,14 @@ export default {
       this.getPageList()
     },
     // 添加、修改、删除按钮的回调
-    updateTradeMark(type) {
+    updateTradeMark(type, row) {
       // 置空
       this.tmForm = { tmName: '', logoUrl: '' }
       if (type !== 'del') {
-        // 若是添加或者修改
         this.dialogFormVisible = true
+        if (type === 'edit') {
+          this.tmForm = row
+        }
       }
     },
     // 上传成功的回调
@@ -129,15 +135,24 @@ export default {
       return isJPG && isLt2M
     },
     // dialog的确认按钮的回调
-    async addOrUpdateTradeMark() {
-      this.dialogFormVisible = false
-      // 发请求
-      const result = await this.$API.trademark.reqAddOrUpdateTradeMarkList(this.tmForm)
-      if (result.code === 200) {
-        // 弹出信息
-        this.$message(this.tmForm.id ? '修改品牌成功' : '添加品牌成功')
-        this.getPageList()
-      }
+    addOrUpdateTradeMark() {
+      // 验证表单
+      this.$refs.ruleForm.validate(async (success) => {
+        // 成功
+        if (success) {
+          this.dialogFormVisible = false
+          // 发请求
+          const result = await this.$API.trademark.reqAddOrUpdateTradeMarkList(this.tmForm)
+          if (result.code === 200) {
+            // 弹出信息
+            this.$message({
+              type: 'success',
+              message: this.tmForm.id ? '修改品牌成功' : '添加品牌成功'
+            })
+            this.getPageList()
+          }
+        }
+      })
     }
   }
 }
