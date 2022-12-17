@@ -12,7 +12,7 @@
       <el-table-column prop="prop" label="操作" width="width" align="center">
         <template slot-scope="{ row, $index }">
           <el-button type="warning" icon="el-icon-edit" size="mini" @click="updateTradeMark('edit', row)">修改</el-button>
-          <el-button type="danger" icon="el-icon-delete" size="mini" @click="updateTradeMark('del')">删除</el-button>
+          <el-button type="danger" icon="el-icon-delete" size="mini" @click="updateTradeMark('del', row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -108,13 +108,32 @@ export default {
     },
     // 添加、修改、删除按钮的回调
     updateTradeMark(type, row) {
-      // 置空
-      this.tmForm = { tmName: '', logoUrl: '' }
+      // 添加/修改
       if (type !== 'del') {
+        // 置空
+        this.tmForm = { tmName: '', logoUrl: '' }
+        // 开启dialog
         this.dialogFormVisible = true
         if (type === 'edit') {
           this.tmForm = row
         }
+      } else {
+        // 删除
+        this.$confirm(`确定删除${row.tmName}的品牌信息吗？`, '提示', {
+          confirmButtonText: '确认删除',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+          .then(async () => {
+            // 发请求删除
+            const result = await this.$API.trademark.reqDeleteTradeMark(row.id)
+            if (result.code === 200) {
+              this.$message({ type: 'success', message: '删除成功' })
+            }
+            // 再次更新品牌
+            this.getPageList()
+          })
+          .catch(() => {})
       }
     },
     // 上传成功的回调
@@ -142,7 +161,7 @@ export default {
         if (success) {
           this.dialogFormVisible = false
           // 发请求
-          const result = await this.$API.trademark.reqAddOrUpdateTradeMarkList(this.tmForm)
+          const result = await this.$API.trademark.reqAddOrUpdateTradeMark(this.tmForm)
           if (result.code === 200) {
             // 弹出信息
             this.$message({
