@@ -39,9 +39,14 @@ Vue.config.productionTip = false
 import API from '@/api'
 Vue.prototype.$API = API
 
+// 引入三级联动菜单
+import CategorySelect from '@/components/CategorySelect'
+// 注册全局组件
+Vue.component(CategorySelect.name, CategorySelect)
+
 new Vue({
   el: '#app',
   router,
   store,
-  render: h => h(App)
+  render: (h) => h(App)
 })

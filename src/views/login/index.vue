@@ -10,7 +10,7 @@
       label-position="left"
     >
       <div class="title-container">
-        <h3 class="title">登录后台项目</h3>
+        <h3 class="title">尚品汇后台管理</h3>
       </div>
       <!-- 用户名 -->
       <el-form-item prop="username">
