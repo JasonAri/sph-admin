@@ -30,7 +30,7 @@
           <el-table-column prop="prop" label="操作" width="150">
             <template slot-scope="{ row, $index }">
               <el-button type="warning" icon="el-icon-edit" size="mini" @click="updateAttr(row)" />
-              <el-button type="danger" icon="el-icon-delete" size="mini" />
+              <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteAttr(row)" />
             </template>
           </el-table-column>
         </el-table>
@@ -48,7 +48,7 @@
         <el-button type="primary" icon="el-icon-plus" :disabled="!attrInfo.attrName" @click="addAttrValue">
           添加属性值
         </el-button>
-        <el-button>取消</el-button>
+        <!-- <el-button>取消</el-button> -->
         <!-- 属性值操作 -->
         <el-table style="width: 100%; margin: 20px 0" border :data="attrInfo.attrValueList">
           <!-- 序号 -->
@@ -225,6 +225,25 @@ export default {
       } else {
         this.$message({ type: 'error', message: `保存失败:${result.data}` })
       }
+    },
+    // 删除属性的回调
+    deleteAttr(row) {
+      this.$confirm(`确定删除${row.attrName}这个属性吗`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(async () => {
+          // 发请求删除属性
+          const result = await this.$API.attr.reqDeleteAttr(row.id)
+          if (result.code === 200) {
+            this.$message({ message: '删除成功', type: 'success' })
+            this.getAttrInfolist()
+          } else {
+            this.$message({ message: `删除失败:${result.data}`, type: 'error' })
+          }
+        })
+        .catch(() => {})
     }
   }
 }
