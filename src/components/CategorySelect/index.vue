@@ -43,6 +43,9 @@ export default {
       this.cForm.category2Id = ''
       this.cForm.category3Id = ''
 
+      // 给父组件传categoryId
+      this.$emit('getCategoryId', this.cForm)
+
       // 获取二级分类
       const result = await this.$API.attr.reqCategory2List(value)
       if (result.code === 200) {
@@ -53,6 +56,9 @@ export default {
     'cForm.category2Id': async function (value) {
       // 置空后面的分类
       this.cForm.category3Id = ''
+
+      // 给父组件传categoryId
+      this.$emit('getCategoryId', this.cForm)
 
       // 若为空则return
       if (!value) return
@@ -65,11 +71,11 @@ export default {
     },
     // 监听三级分类
     'cForm.category3Id': async function (value) {
-      // 若为空则return
-      if (!value) return
-
       // 给父组件传categoryId
       this.$emit('getCategoryId', this.cForm)
+
+      // 若为空则return
+      if (!value) return
     }
   },
   mounted() {
