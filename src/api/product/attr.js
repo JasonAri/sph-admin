@@ -8,5 +8,5 @@ export const reqCategory2List = (category1Id) => request({ url: `/admin/product/
 export const reqCategory3List = (category2Id) => request({ url: `/admin/product/getCategory3/${category2Id}`, method: 'get' })
 // 平台属性
 export const reqAttrInfoList = (category1Id, category2Id, category3Id) => request({ url: `/admin/product/attrInfoList/${category1Id}/${category2Id}/${category3Id}`, method: 'get' })
-// 添加属性、属性值
-export const reqAddAttr = (data) => request({ url: '/admin/product/saveAttrInfo', method: 'post', data })
+// 保存属性信息
+export const reqSaveAttrInfo = (data) => request({ url: '/admin/product/saveAttrInfo', method: 'post', data })

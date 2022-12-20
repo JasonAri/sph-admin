@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-form :inline="true" class="demo-form-inline" :model="cForm">
+    <el-form :inline="true" class="demo-form-inline" :model="cForm" :disabled="isdisable">
       <el-form-item label="一级分类">
         <el-select v-model="cForm.category1Id" placeholder="请选择">
           <el-option v-for="(c1, index) in list1" :key="c1.id" :label="c1.name" :value="c1.id" />
@@ -23,6 +23,12 @@
 <script>
 export default {
   name: 'CategorySelect',
+  props: {
+    isdisable: {
+      type: Boolean,
+      default: false
+    }
+  },
   data() {
     return {
       list1: [],

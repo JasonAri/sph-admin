@@ -2,7 +2,7 @@
   <div>
     <!-- 三级分类列表 -->
     <el-card style="margin: 20px 0px">
-      <CategorySelect @getCategoryId="getCategoryId" />
+      <CategorySelect :isdisable="!isShowTable" @getCategoryId="getCategoryId" />
     </el-card>
 
     <!-- 下方属性展示卡 -->
@@ -70,12 +70,18 @@
             </template>
           </el-table-column>
           <!-- 操作 -->
-          <el-table-column prop="prop" label="操作" width="100px">
-            <el-button type="danger" icon="el-icon-delete" size="mini" />
+          <el-table-column prop="prop" label="操作">
+            <template slot-scope="{ row, $index }">
+              <!-- 气泡确认框 -->
+              <el-popconfirm :title="`确定删除${row.valueName}吗?`" @onConfirm="deleteAttrValue($index)">
+                <!-- 删除按钮 -->
+                <el-button slot="reference" type="danger" icon="el-icon-delete" size="mini" />
+              </el-popconfirm>
+            </template>
           </el-table-column>
         </el-table>
         <!-- 下方保存/取消按钮 -->
-        <el-button type="primary">保存</el-button>
+        <el-button type="primary" :disabled="attrInfo.attrValueList.length < 1" @click="saveAttrInfo">保存</el-button>
         <el-button @click="isShowTable = true">取消</el-button>
       </div>
     </el-card>
@@ -91,6 +97,7 @@ export default {
     return {
       isShowTable: true,
       // 三级分类id
+      category1Id: '',
       category3Id: '',
       // 属性列表
       attrInfoList: [],
@@ -105,10 +112,19 @@ export default {
   },
   methods: {
     // 自定义事件的回调
-    async getCategoryId(cForm) {
+    getCategoryId(cForm) {
+      // 接收解构表单带来的id
       const { category1Id, category2Id, category3Id } = cForm
+      // 更新三个id
+      this.category1Id = category1Id
+      this.category2Id = category2Id
       this.category3Id = category3Id
-
+      // 获取属性列表
+      this.getAttrInfolist()
+    },
+    // 更新属性table的回调
+    async getAttrInfolist() {
+      const { category1Id, category2Id, category3Id } = this
       // 三个id全齐才发请求，否则清空属性列表
       if (category1Id && category2Id && category3Id) {
         // 获取attrInfoList
@@ -189,6 +205,26 @@ export default {
       this.$nextTick(() => {
         this.$refs[index].focus()
       })
+    },
+    // 气泡确认框成功的回调
+    deleteAttrValue(index) {
+      this.attrInfo.attrValueList.splice(index, 1)
+    },
+    // 保存按钮的回调
+    async saveAttrInfo() {
+      // 整理参数(这里的filter不需要return接收结果，因为操作的是数组里的对象)
+      this.attrInfo.attrValueList.filter((item) => {
+        delete item.flag
+      })
+      // 发请求
+      const result = await this.$API.attr.reqSaveAttrInfo(this.attrInfo)
+      if (result.code === 200) {
+        this.$message({ type: 'success', message: '保存成功' })
+        this.getAttrInfolist()
+        this.isShowTable = true
+      } else {
+        this.$message({ type: 'error', message: `保存失败:${result.data}` })
+      }
     }
   }
 }
