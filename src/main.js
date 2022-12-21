@@ -41,8 +41,11 @@ Vue.prototype.$API = API
 
 // 引入三级联动菜单
 import CategorySelect from '@/components/CategorySelect'
+// 引入HintButton
+import HintButton from '@/components/HintButton'
 // 注册全局组件
 Vue.component(CategorySelect.name, CategorySelect)
+Vue.component(HintButton.name, HintButton)
 
 new Vue({
   el: '#app',
