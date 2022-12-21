@@ -19,6 +19,7 @@
           :file-list="spuImageList"
           :on-preview="handlePictureCardPreview"
           :on-remove="handleRemove"
+          :on-success="handleSuccess"
         >
           <i class="el-icon-plus" />
         </el-upload>
@@ -27,13 +28,49 @@
         </el-dialog>
       </el-form-item>
       <el-form-item label="销售属性">
-        <el-select placeholder="还有3未选择" value> <el-option label="option" /></el-select>
-        <el-button type="primary" icon="el-icon-plus">添加销售属性</el-button>
-        <el-table style="100%" border>
-          <el-table-column type="index" label="序号" width="80px"></el-table-column>
-          <el-table-column prop="prop" label="属性名" width="width"></el-table-column>
-          <el-table-column prop="prop" label="属性值名称列表" width="width"></el-table-column>
-          <el-table-column prop="prop" label="操作" width="width"></el-table-column>
+        <el-select v-model="attrIdAndAttrName" :placeholder="`还有${unSelectSaleAttr.length}未选择`">
+          <el-option
+            v-for="unSelect in unSelectSaleAttr"
+            :key="unSelect.id"
+            :label="unSelect.name"
+            :value="`${unSelect.id}:${unSelect.name}`"
+          />
+        </el-select>
+        <el-button type="primary" icon="el-icon-plus" style="margin-left: 5px" @click="addSpuSaleAttrList">
+          添加销售属性
+        </el-button>
+        <el-table style="100%;margin:10px 0;" border :data="spu.spuSaleAttrList">
+          <el-table-column type="index" label="序号" width="80px" align="center" />
+          <el-table-column prop="saleAttrName" label="属性名" width="100px" align="center" />
+          <el-table-column prop="prop" label="属性值名称列表" width="width">
+            <template slot-scope="{ row, $index }">
+              <el-tag
+                v-for="tag in row.spuSaleAttrValueList"
+                :key="tag.id"
+                closable
+                :disable-transitions="false"
+                @close="handleClose(tag)"
+              >
+                {{ tag.saleAttrValueName }}
+              </el-tag>
+              <el-input
+                v-if="row.inputVisible"
+                ref="saveTagInput"
+                v-model="row.inputValue"
+                class="input-new-tag"
+                size="small"
+                @keyup.enter.native="handleInputConfirm(row)"
+                @blur="handleInputConfirm(row)"
+              />
+              <el-button v-else class="button-new-tag" size="small" @click="addSaleAttrValue(row)">添加</el-button>
+            </template>
+          </el-table-column>
+          <el-table-column prop="prop" label="操作" width="80px">
+            <template slot-scope="{ row, $index }">
+              <!-- 删除按钮 -->
+              <el-button type="danger" icon="el-icon-delete" size="mini" />
+            </template>
+          </el-table-column>
         </el-table>
         <el-button type="primary">保存</el-button>
         <el-button @click="$emit('changeScene', 0)">取消</el-button>
@@ -80,6 +117,8 @@ export default {
         ],
         tmId: 0
       },
+      // 用于收集新增的spuSaleAttrList的id和name
+      attrIdAndAttrName: '',
       // 品牌列表
       tradeMarkList: [],
       // 图片列表
@@ -89,6 +128,15 @@ export default {
       // 照片墙初始数据
       dialogImageUrl: '',
       dialogVisible: false
+    }
+  },
+  computed: {
+    unSelectSaleAttr() {
+      return this.saleAttrList.filter((item) => {
+        return this.spu.spuSaleAttrList.every((item1) => {
+          return item1.saleAttrName !== item.name
+        })
+      })
     }
   },
   methods: {
@@ -121,17 +169,84 @@ export default {
         this.saleAttrList = saleResult.data
       }
     },
-    // 删除图片时触发
+    // 图片上传成功的回调
+    handleSuccess(response, file, fileList) {
+      if (response.code === 200) {
+        this.spuImageList = fileList
+      }
+    },
+    // 删除图片的回调
     handleRemove(file, fileList) {
-      console.log(file, fileList)
+      // 删除图片
+      this.spuImageList = fileList
     },
     // 预览图片时触发
     handlePictureCardPreview(file) {
       this.dialogImageUrl = file.url
       this.dialogVisible = true
+    },
+    // 添加销售属性按钮的回调
+    addSpuSaleAttrList() {
+      // 切割数组
+      const [baseSaleAttrId, saleAttrName] = this.attrIdAndAttrName.split(':')
+
+      // 创建一个新销售属性
+      const newSaleAttr = {
+        baseSaleAttrId,
+        saleAttrName,
+        spuSaleAttrValueList: []
+      }
+      // push
+      this.spu.spuSaleAttrList.push(newSaleAttr)
+      // 清空数据
+      this.attrIdAndAttrName = ''
+    },
+    // 属性值名称列表中添加按钮的回调
+    addSaleAttrValue(row) {
+      // 添加响应式属性
+      this.$set(row, 'inputVisible', true)
+      this.$set(row, 'inputValue', '')
+    },
+    // 失去焦点的回调
+    handleInputConfirm(row) {
+      // 关闭input框
+      row.inputVisible = false
+      const { baseSaleAttrId, inputValue } = row
+      // 校验字段为空则return
+      if (!inputValue || inputValue.trim() === '') return
+      // 重复则return
+      const isRepeat = row.spuSaleAttrValueList.some((item) => {
+        return item.saleAttrValueName === inputValue
+      })
+      if (isRepeat) return
+
+      // 校验通过，创建新属性值对象
+      const newSaleAttrValue = { baseSaleAttrId, saleAttrValueName: inputValue }
+      // push
+      row.spuSaleAttrValueList.push(newSaleAttrValue)
+    },
+    // 删除属性值
+    handleClose(tag) {
+      console.log(tag)
     }
   }
 }
 </script>
 
-<style></style>
+<style>
+.el-tag + .el-tag {
+  margin-left: 10px;
+}
+.button-new-tag {
+  margin-left: 10px;
+  height: 32px;
+  line-height: 30px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.input-new-tag {
+  width: 90px;
+  margin-left: 10px;
+  vertical-align: bottom;
+}
+</style>
