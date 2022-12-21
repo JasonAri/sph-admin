@@ -18,7 +18,7 @@
           <el-table-column prop="prop" label="操作" width="width">
             <template slot-scope="{ row, $index }">
               <HintButton type="success" icon="el-icon-plus" size="mini" title="添加SPU" />
-              <HintButton type="warning" icon="el-icon-edit" size="mini" title="修改SPU" @click="scene = 1" />
+              <HintButton type="warning" icon="el-icon-edit" size="mini" title="修改SPU" @click="updateSpu(row)" />
               <HintButton type="info" icon="el-icon-info" size="mini" title="查看当前SPU全部SKU列表" />
               <HintButton type="danger" icon="el-icon-delete" size="mini" title="删除SPU" />
             </template>
@@ -37,9 +37,9 @@
         />
       </div>
       <!-- 添加/修改SPU的部分 -->
-      <SpuForm v-show="scene == 1" />
+      <SpuForm v-show="scene == 1" ref="spuForm" @changeScene="changeScene" />
       <!-- 添加SKU的部分 -->
-      <SkuForm v-show="scene == 2" />
+      <SkuForm v-show="scene == 2" @changeScene="changeScene" />
     </el-card>
   </div>
 </template>
@@ -103,6 +103,16 @@ export default {
         this.total = result.data.total
         this.records = result.data.records
       }
+    },
+    // 修改某个SPU的回调
+    updateSpu(row) {
+      this.scene = 1
+      // 在父组件中通过$refs来获取子组件
+      this.$refs.spuForm.initSpuData(row)
+    },
+    // 改变场景的回调
+    changeScene(scene) {
+      this.scene = scene
     }
   }
 }
