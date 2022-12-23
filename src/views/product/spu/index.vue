@@ -17,7 +17,7 @@
           <el-table-column prop="description" label="SPU描述" width="width" />
           <el-table-column prop="prop" label="操作" width="width">
             <template slot-scope="{ row, $index }">
-              <HintButton type="success" icon="el-icon-plus" size="mini" title="添加SKU" @click="addSku" />
+              <HintButton type="success" icon="el-icon-plus" size="mini" title="添加SKU" @click="addSku(row)" />
               <HintButton type="warning" icon="el-icon-edit" size="mini" title="修改SPU" @click="updateSpu(row)" />
               <HintButton type="info" icon="el-icon-info" size="mini" title="查看当前SPU全部SKU列表" />
               <el-popconfirm :title="`确定删除${row.spuName}吗`" @onConfirm="deleteSpu(row)">
@@ -41,7 +41,7 @@
       <!-- 添加/修改SPU的部分 -->
       <SpuForm v-show="scene == 1" ref="spuForm" @changeScene="changeScene" />
       <!-- 添加SKU的部分 -->
-      <SkuForm v-show="scene == 2" @changeScene="changeScene" />
+      <SkuForm v-show="scene == 2" ref="skuForm" @changeScene="changeScene" />
     </el-card>
   </div>
 </template>
@@ -157,8 +157,11 @@ export default {
       }
     },
     // 点击添加sku的回调
-    addSku() {
-      console.log(111)
+    addSku(row) {
+      // 切换场景
+      this.scene = 2
+      // 调用子组件的方法
+      this.$refs.skuForm.getData(this.category1Id, this.category2Id, row)
     }
   }
 }
