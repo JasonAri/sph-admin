@@ -15,3 +15,17 @@ export const reqSpuImageList = (spuId) => request({ url: `/admin/product/spuImag
 
 // 获取平台销售属性
 export const reqBaseSaleAttrList = () => request({ url: '/admin/product/baseSaleAttrList/', method: 'get' })
+
+// 修改/添加SPU
+export const reqAddOrUpdateSpu = (spuInfo) => {
+  // 修改
+  if (spuInfo.id) {
+    return request({ url: '/admin/product/updateSpuInfo', method: 'post', data: spuInfo })
+  } else {
+    // 添加
+    return request({ url: '/admin/product/saveSpuInfo', method: 'post', data: spuInfo })
+  }
+}
+
+// 删除spu
+export const reqDeleteSpu = (spuId) => request({ url: `/admin/product/deleteSpu/${spuId}`, method: 'delete' })

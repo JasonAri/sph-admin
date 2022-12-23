@@ -36,7 +36,13 @@
             :value="`${unSelect.id}:${unSelect.name}`"
           />
         </el-select>
-        <el-button type="primary" icon="el-icon-plus" style="margin-left: 5px" @click="addSpuSaleAttrList">
+        <el-button
+          type="primary"
+          icon="el-icon-plus"
+          style="margin-left: 5px"
+          :disabled="!attrIdAndAttrName"
+          @click="addSpuSaleAttrList"
+        >
           添加销售属性
         </el-button>
         <el-table style="100%;margin:10px 0;" border :data="spu.spuSaleAttrList">
@@ -72,8 +78,8 @@
             </template>
           </el-table-column>
         </el-table>
-        <el-button type="primary">保存</el-button>
-        <el-button @click="$emit('changeScene', 0)">取消</el-button>
+        <el-button type="primary" :disabled="!spu.spuName" @click="addOrUpdateSpu">保存</el-button>
+        <el-button @click="cancel">取消</el-button>
       </el-form-item>
     </el-form>
   </div>
@@ -86,36 +92,11 @@ export default {
       // spu信息
       spu: {
         category3Id: 0,
-        description: 'string',
-        id: 0,
-        spuImageList: [
-          {
-            id: 0,
-            imgName: 'string',
-            imgUrl: 'string',
-            spuId: 0
-          }
-        ],
-        spuName: 'string',
-        spuSaleAttrList: [
-          {
-            baseSaleAttrId: 0,
-            id: 0,
-            saleAttrName: 'string',
-            spuId: 0,
-            spuSaleAttrValueList: [
-              {
-                baseSaleAttrId: 0,
-                id: 0,
-                isChecked: 'string',
-                saleAttrName: 'string',
-                saleAttrValueName: 'string',
-                spuId: 0
-              }
-            ]
-          }
-        ],
-        tmId: 0
+        description: '',
+        spuImageList: [],
+        spuName: '',
+        spuSaleAttrList: [],
+        tmId: ''
       },
       // 用于收集新增的spuSaleAttrList的id和name
       attrIdAndAttrName: '',
@@ -141,32 +122,38 @@ export default {
   },
   methods: {
     // 初始化spuForm的数据
-    async initSpuData(spu) {
-      // 获取spu信息
-      const spuResult = await this.$API.spu.reqSpu(spu.id)
-      if (spuResult.code === 200) {
-        this.spu = spuResult.data
-      }
+    async initSpuData(spu, category3Id) {
       // 获取品牌信息
       const tradeMarkResult = await this.$API.spu.reqTradeMarkList()
       if (tradeMarkResult.code === 200) {
         this.tradeMarkList = tradeMarkResult.data
       }
-      // 获取图片
-      const spuImageListResult = await this.$API.spu.reqSpuImageList(spu.id)
-      if (spuImageListResult.code === 200) {
-        // 数据需要有name、url字段
-        const listArr = spuImageListResult.data
-        listArr.forEach((item) => {
-          item.name = item.imgName
-          item.url = item.imgUrl
-        })
-        this.spuImageList = listArr
-      }
       // 获取平台销售属性列表
       const saleResult = await this.$API.spu.reqBaseSaleAttrList()
       if (saleResult.code === 200) {
         this.saleAttrList = saleResult.data
+      }
+      //  若为修改spu模式
+      if (spu) {
+        // 获取spu信息
+        const spuResult = await this.$API.spu.reqSpu(spu.id)
+        if (spuResult.code === 200) {
+          this.spu = spuResult.data
+        }
+        // 获取图片
+        const spuImageListResult = await this.$API.spu.reqSpuImageList(spu.id)
+        if (spuImageListResult.code === 200) {
+          // 数据需要有name、url字段
+          const listArr = spuImageListResult.data
+          listArr.forEach((item) => {
+            item.name = item.imgName
+            item.url = item.imgUrl
+          })
+          this.spuImageList = listArr
+        }
+      } else {
+        // 添加模式
+        this.spu.category3Id = category3Id
       }
     },
     // 图片上传成功的回调
@@ -228,6 +215,32 @@ export default {
     // 删除属性值
     handleClose(tag) {
       console.log(tag)
+    },
+    // 保存spuform的回调
+    async addOrUpdateSpu() {
+      // 整理spu
+      this.spu.spuImageList = this.spuImageList.map((item) => {
+        return {
+          imgName: item.name,
+          imgUrl: item.response ? item.response.data : item.url
+        }
+      })
+      // 发请求
+      const result = await this.$API.spu.reqAddOrUpdateSpu(this.spu)
+      if (result.code === 200) {
+        this.$message({ type: 'success', message: '保存成功！' })
+        // 通知父组件切换场景
+        this.$emit('changeScene', { scene: 0, type: this.spu.id ? 'edit' : 'add' })
+      }
+      // 清除数据
+      Object.assign(this._data, this.$options.data())
+    },
+    // 取消按钮的回调
+    cancel() {
+      // 清除数据
+      Object.assign(this._data, this.$options.data())
+      // 切换
+      this.$emit('changeScene', { scene: 0, type: 'cancel' })
     }
   }
 }
