@@ -230,7 +230,7 @@ export default {
       if (result.code === 200) {
         this.$message({ type: 'success', message: '保存成功！' })
         // 通知父组件切换场景
-        this.$emit('changeScene', { scene: 0, type: this.spu.id ? 'edit' : 'add' })
+        this.$emit('changeScene', { scene: 0, toPage: this.spu.id ? '' : 1 })
       }
       // 清除数据
       Object.assign(this._data, this.$options.data())
@@ -240,7 +240,7 @@ export default {
       // 清除数据
       Object.assign(this._data, this.$options.data())
       // 切换
-      this.$emit('changeScene', { scene: 0, type: 'cancel' })
+      this.$emit('changeScene', { scene: 0, type: '' })
     }
   }
 }

@@ -58,7 +58,7 @@
         </el-table>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary">保存</el-button>
+        <el-button type="primary" @click="saveSkuInfo">保存</el-button>
         <el-button @click="cancel">取消</el-button>
       </el-form-item>
     </el-form>
@@ -102,11 +102,7 @@ export default {
         skuAttrValueList: [
           // {
           //   attrId: 0,
-          //   attrName: 'string',
-          //   id: 0,
-          //   skuId: 0,
           //   valueId: 0,
-          //   valueName: 'string'
           // }
         ],
         skuSaleAttrValueList: [
@@ -132,7 +128,7 @@ export default {
       this.skuInfo.spuId = spu.id
       this.skuInfo.tmId = spu.tmId
 
-      const res1 = await this.$API.sku.reqSpuImageList(spu.id)
+      const res1 = await this.$API.spu.reqSpuImageList(spu.id)
       if (res1.code === 200) {
         const list = res1.data
         list.forEach((item) => {
@@ -140,11 +136,11 @@ export default {
         })
         this.spuImageList = list
       }
-      const res2 = await this.$API.sku.reqSpuSaleAttrList(spu.id)
+      const res2 = await this.$API.spu.reqSpuSaleAttrList(spu.id)
       if (res2.code === 200) {
         this.spuSaleAttrList = res2.data
       }
-      const res3 = await this.$API.sku.reqAttrInfoList(category1Id, category2Id, spu.category3Id)
+      const res3 = await this.$API.spu.reqAttrInfoList(category1Id, category2Id, spu.category3Id)
       if (res3.code === 200) {
         this.attrInfoList = res3.data
       }
@@ -152,6 +148,7 @@ export default {
     // 取消按钮的回调
     cancel() {
       this.$emit('changeScene', { scene: 0, type: 'cancel' })
+      Object.assign(this._data, this.$options.data())
     },
     // table多选框回调
     handleSelectionChange(params) {
@@ -166,6 +163,48 @@ export default {
       row.isDefault = 1
       // 收集默认图片地址
       this.skuInfo.skuDefaultImg = row.imgUrl
+    },
+    // 保存按钮的回调
+    async saveSkuInfo() {
+      // 解构
+      const { attrInfoList, spuSaleAttrList, imageList, skuInfo } = this
+      // 处理品牌数据
+      skuInfo.skuAttrValueList = attrInfoList.reduce((prev, item) => {
+        if (item.attrIdAndValueId) {
+          const [attrId, valueId] = item.attrIdAndValueId.split(':')
+          prev.push({ attrId, valueId })
+        }
+        return prev
+      }, [])
+      // 处理销售属性
+      skuInfo.skuSaleAttrValueList = spuSaleAttrList.reduce((prev, item) => {
+        if (item.saleAttrIdAndValueId) {
+          const [saleAttrId, saleAttrValueId] = item.saleAttrIdAndValueId.split(':')
+          prev.push({ saleAttrId, saleAttrValueId })
+        }
+        return prev
+      }, [])
+      // 图片列表
+      skuInfo.skuImageList = imageList.map((item) => {
+        return {
+          imgName: item.imgName,
+          imgUrl: item.imgUrl,
+          isDefault: item.isDefault,
+          spuImgId: item.id
+        }
+      })
+
+      // 发请求
+      const result = await this.$API.spu.reqSaveSkuInfo(skuInfo)
+      if (result.code === 200) {
+        this.$message({ message: '保存成功！', type: 'success' })
+        // 切换场景
+        this.$emit('changeScene', { scene: 0, toPage: '' })
+        // 清空数据
+        Object.assign(this._data, this.$options.data())
+      } else {
+        this.$message({ message: '保存失败', type: 'error' })
+      }
     }
   }
 }

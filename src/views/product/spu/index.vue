@@ -19,7 +19,13 @@
             <template slot-scope="{ row, $index }">
               <HintButton type="success" icon="el-icon-plus" size="mini" title="添加SKU" @click="addSku(row)" />
               <HintButton type="warning" icon="el-icon-edit" size="mini" title="修改SPU" @click="updateSpu(row)" />
-              <HintButton type="info" icon="el-icon-info" size="mini" title="查看当前SPU全部SKU列表" />
+              <HintButton
+                type="info"
+                icon="el-icon-info"
+                size="mini"
+                title="查看当前SPU全部SKU列表"
+                @click="showSkuList(row)"
+              />
               <el-popconfirm :title="`确定删除${row.spuName}吗`" @onConfirm="deleteSpu(row)">
                 <HintButton slot="reference" type="danger" icon="el-icon-delete" size="mini" title="删除SPU" />
               </el-popconfirm>
@@ -43,6 +49,20 @@
       <!-- 添加SKU的部分 -->
       <SkuForm v-show="scene == 2" ref="skuForm" @changeScene="changeScene" />
     </el-card>
+    <!-- Sku详情列表 -->
+    <el-dialog :title="`${spu.spuName}SKU列表`" :visible.sync="dialogTableVisible" :before-close="dialogClose">
+      <!-- skuList table展示位置 -->
+      <el-table v-loading="loading" style="width: 100%" border :data="skuList">
+        <el-table-column property="skuName" label="名称" />
+        <el-table-column property="price" label="价格" width="80px" />
+        <el-table-column property="weight" label="重量" width="80px" />
+        <el-table-column label="默认图片" width="110px">
+          <template slot-scope="{ row, $index }">
+            <img :src="row.skuDefaultImg" style="width: 100px; height: 100px" />
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
@@ -67,7 +87,13 @@ export default {
       // SPU列表数据
       records: [],
       // 场景标志 0:SPU列表, 1:添加修改SPU, 2:添加SKU
-      scene: 0
+      scene: 0,
+      // sku列表显示标志
+      dialogTableVisible: false,
+      // spu的信息
+      spu: {},
+      skuList: [],
+      loading: true
     }
   },
   watch: {
@@ -131,12 +157,12 @@ export default {
       this.$refs.spuForm.initSpuData(row, this.category3Id)
     },
     // 改变场景的回调
-    changeScene({ scene, type }) {
+    changeScene({ scene, toPage }) {
       // 切换场景
       this.scene = scene
-      // 如果时新增spu，则将页面置于第一页
-      if (type === 'add') {
-        this.page = 1
+      // 指定切换第几页
+      if (toPage) {
+        this.page = toPage
       }
       // 更新数据
       this.getSpuList()
@@ -162,6 +188,23 @@ export default {
       this.scene = 2
       // 调用子组件的方法
       this.$refs.skuForm.getData(this.category1Id, this.category2Id, row)
+    },
+    // 查看sku列表的回调
+    async showSkuList(spu) {
+      this.dialogTableVisible = true
+      this.spu = spu
+      // 获取sku列表的数据
+      const result = await this.$API.spu.reqSkuList(spu.id)
+      if (result.code === 200) {
+        this.skuList = result.data
+        this.loading = false
+      }
+    },
+    // 关闭对话框的回调
+    dialogClose(done) {
+      this.loading = true
+      this.skuList = []
+      done()
     }
   }
 }
