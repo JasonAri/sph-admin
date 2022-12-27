@@ -12,3 +12,5 @@ export const reqIsSale = (skuId, isSale) => {
     return request({ url: `/admin/product/cancelSale/${skuId}`, method: 'get' })
   }
 }
+// 获取sku详情
+export const reqSkuById = (skuId) => request({ url: `/admin/product/getSkuById/${skuId}`, method: 'get' })
