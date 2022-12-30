@@ -1,30 +1,34 @@
 <template>
-  <div class="charts" ref="charts"></div>
+  <div>
+    <div class="header">
+      <span class="header-title">{{ title }}</span>
+      <i class="el-icon-info"></i>
+    </div>
+    <div class="main">
+      <span class="main-title">{{ count }}</span>
+      <span>{{ growth }}%</span>
+      <i v-if="growth > 0" class="el-icon-caret-top" />
+      <i v-else class="el-icon-caret-bottom" />
+    </div>
+    <div class="footer">
+      <div class="charts" ref="charts"></div>
+    </div>
+  </div>
 </template>
 
 <script>
 import * as echarts from 'echarts'
 export default {
   name: '',
-  props: ['visittrend'],
+  props: ['title', 'count', 'growth', 'data'],
   data() {
     return {
       lineCharts: null
     }
   },
   watch: {
-    visittrend() {
-      // 配置echarts
-      this.setEchartsOptions()
-    }
-  },
-  mounted() {
-    // 初始化echarts实例
-    this.lineCharts = echarts.init(this.$refs.charts)
-  },
-  methods: {
-    // 配置echarts的回调
-    setEchartsOptions() {
+    data() {
+      // 配置项
       this.lineCharts.setOption({
         xAxis: {
           show: false,
@@ -37,14 +41,14 @@ export default {
         series: [
           {
             type: 'line',
-            data: this.visittrend,
+            data: this.data,
             // 拐点
             itemStyle: {
               opacity: 0
             },
             // 线条样式
             lineStyle: {
-              color: 'purple'
+              color: 'skyblue'
             },
             smooth: true,
             // 填充颜色
@@ -58,7 +62,7 @@ export default {
                 colorStops: [
                   {
                     offset: 0,
-                    color: 'purple'
+                    color: 'skyblue'
                   },
                   {
                     offset: 1,
@@ -79,13 +83,33 @@ export default {
         }
       })
     }
+  },
+  mounted() {
+    this.lineCharts = echarts.init(this.$refs.charts)
   }
 }
 </script>
 
 <style scoped>
+>>> .el-icon-info {
+  color: gray;
+}
+>>> .el-icon-caret-top {
+  color: red;
+}
+>>> .el-icon-caret-bottom {
+  color: green;
+}
+.header-title {
+  margin-right: 10px;
+}
+.main-title {
+  display: inline-block;
+  margin: 10px 15px 10px 0;
+  font-size: 28px;
+}
 .charts {
   width: 100%;
-  height: 100%;
+  height: 50px;
 }
 </style>
