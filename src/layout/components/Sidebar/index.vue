@@ -31,7 +31,8 @@ export default {
       'sidebar'
     ]),
     routes() {
-      return this.$router.options.routes
+      // 遍历仓库计算的全部路由
+      return this.$store.state.user.resultRoutes
     },
     activeMenu() {
       const route = this.$route
